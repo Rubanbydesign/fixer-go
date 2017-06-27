@@ -70,20 +70,19 @@ func Convert(ctx context.Context, from Currency, to Currency, amt float64) (floa
 	}
 	rates, err := Get(ctx, from)
 	if err != nil {
-		return 0, nil
+		return amt, err
 	}
 	for i := range rates {
-		if rates[i].Currency != to {
-			continue
+		if rates[i].Currency == to || rates[i].Currency.String() == to.String() {
+			return amt * rates[i].Rate, nil
 		}
-		return rates[i].Rate, nil
 	}
-	return 0, fmt.Errorf("Rates for %s not available", to)
+	return amt, fmt.Errorf("Rates for %s not available", to)
 }
 
 func Get(ctx context.Context, base Currency) (Rates, error) {
 	c := getClient(ctx)
-	r, err := c.Get(fmt.Sprintf("https://api.fixer.io/latest?base=%s", base))
+	r, err := c.Get(fmt.Sprintf("http://api.fixer.io/latest?base=%s", base))
 	if err != nil {
 		return nil, err
 	}
